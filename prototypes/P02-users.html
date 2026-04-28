@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 任务管理系统</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========== CSS变量定义 ========== */
+        :root {
+            /* 主题颜色 */
+            --primary-blue: #1e3a8a;
+            --primary-blue-dark: #1e40af;
+            --accent-cyan: #06b6d4;
+            --accent-cyan-light: #22d3ee;
+            --success-green: #10b981;
+            --warning-orange: #f59e0b;
+            --error-red: #ef4444;
+            
+            /* 灰度色 */
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* 间距 */
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 32px;
+            --spacing-xl: 48px;
+            
+            /* 圆角 */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            
+            /* 阴影 */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            
+            /* 字体 */
+            --font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            
+            /* 布局 */
+            --sidebar-width: 240px;
+            --header-height: 64px;
+        }
+        
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-family);
+            background: var(--gray-50);
+            color: var(--gray-900);
+            min-height: 100vh;
+        }
+        
+        /* ========== 主布局 ========== */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* ========== 侧边栏 ========== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary-blue), var(--primary-blue-dark));
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
+        }
+        
+        .sidebar-logo {
+            padding: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sidebar-logo-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--primary-blue);
+        }
+        
+        .sidebar-logo-text {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--spacing-md) 0;
+            overflow-y: auto;
+        }
+        
+        .nav-item {
+            padding: 12px var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-left: 4px solid var(--accent-cyan);
+        }
+        
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+        
+        .sidebar-footer {
+            padding: var(--spacing-md);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .user-details {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .user-role {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* ========== 主内容区 ========== */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* ========== 头部 ========== */
+        .header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--spacing-lg);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        /* ========== 内容区域 ========== */
+        .content {
+            flex: 1;
+            padding: var(--spacing-lg);
+        }
+        
+        /* ========== 工具栏 ========== */
+        .toolbar {
+            background: white;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: center;
+        }
+        
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            font-size: 14px;
+            font-family: var(--font-family);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            fill: var(--gray-400);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--font-family);
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--gray-200);
+        }
+        
+        .btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        
+        /* ========== 表格 ========== */
+        .table-container {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table thead {
+            background: var(--gray-50);
+        }
+        
+        .table th {
+            padding: 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--gray-200);
+        }
+        
+        .table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .table th.sortable:hover {
+            color: var(--primary-blue);
+        }
+        
+        .table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 14px;
+            color: var(--gray-700);
+        }
+        
+        .table tbody tr {
+            transition: background 0.2s ease;
+        }
+        
+        .table tbody tr:hover {
+            background: var(--gray-50);
+        }
+        
+        /* 徽章 */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+        }
+        
+        .badge-admin {
+            background: rgba(30, 58, 138, 0.1);
+            color: var(--primary-blue);
+        }
+        
+        .badge-member {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent-cyan);
+        }
+        
+        .badge-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+        }
+        
+        .badge-disabled {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--gray-500);
+        }
+        
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-icon {
+            padding: 8px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            color: var(--gray-500);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-icon:hover {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+        
+        .btn-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+        
+        /* ========== 分页 ========== */
+        .pagination {
+            padding: var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--gray-200);
+        }
+        
+        .pagination-info {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+        
+        .pagination-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .page-btn {
+            padding: 8px 12px;
+            font-size: 14px;
+            font-family: var(--font-family);
+            background: white;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--gray-700);
+        }
+        
+        .page-btn:hover:not(:disabled) {
+            background: var(--gray-50);
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+        
+        .page-btn.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+        
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* ========== 模态框 ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray-500);
+            padding: 4px;
+            transition: color 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            color: var(--gray-700);
+        }
+        
+        .modal-body {
+            padding: var(--spacing-md);
+        }
+        
+        .modal-footer {
+            padding: var(--spacing-md);
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+        }
+        
+        /* ========== 表单 ========== */
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .form-label .required {
+            color: var(--error-red);
+            margin-left: 4px;
+        }
+        
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-family: var(--font-family);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+        
+        /* ========== Toast提示 ========== */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            pointer-events: none;
+        }
+        
+        .toast {
+            background: white;
+            padding: 16px 24px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease-out;
+            pointer-events: all;
+            border-left: 4px solid;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .toast.success { border-left-color: var(--success-green); }
+        .toast.error { border-left-color: var(--error-red); }
+        .toast.warning { border-left-color: var(--warning-orange); }
+        
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        
+        .toast-message {
+            flex: 1;
+            font-size: 14px;
+            color: var(--gray-700);
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray-400);
+            padding: 4px;
+            transition: color 0.3s ease;
+        }
+        
+        .toast-close:hover {
+            color: var(--gray-600);
+        }
+        
+        /* ========== 骨架屏 ========== */
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: var(--radius-sm);
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .skeleton-row {
+            height: 60px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- ========== 侧边栏 ========== -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                    </svg>
+                </div>
+                <div class="sidebar-logo-text">任务管理</div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="P06-tasks.html" class="nav-item">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                    </svg>
+                    <span>任务列表</span>
+                </a>
+                <a href="P02-users.html" class="nav-item active">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                    <span>用户管理</span>
+                </a>
+                <a href="P04-audit-logs.html" class="nav-item">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                    </svg>
+                    <span>审计日志</span>
+                </a>
+                <a href="P05-settings-security.html" class="nav-item">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                    </svg>
+                    <span>安全设置</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">管</div>
+                    <div class="user-details">
+                        <div class="user-name">系统管理员</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- ========== 主内容区 ========== -->
+        <main class="main-content">
+            <!-- 头部 -->
+            <header class="header">
+                <h1 class="header-title">用户管理</h1>
+                <div class="header-actions">
+                    <button class="btn-icon" title="通知">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-icon" title="退出登录" onclick="logout()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- 内容 -->
+            <div class="content">
+                <!-- 工具栏 -->
+                <div class="toolbar">
+                    <div class="search-box">
+                        <svg class="search-icon" viewBox="0 0 24 24">
+                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                        </svg>
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            id="searchInput" 
+                            placeholder="搜索用户名、邮箱..." 
+                        >
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateModal()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                        </svg>
+                        <span>创建用户</span>
+                    </button>
+                </div>
+                
+                <!-- 表格 -->
+                <div class="table-container">
+                    <div class="table-wrapper">
+                        <table class="table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">
+                                        <input type="checkbox" id="selectAll">
+                                    </th>
+                                    <th class="sortable" onclick="sortTable('username')">用户名</th>
+                                    <th class="sortable" onclick="sortTable('email')">邮箱</th>
+                                    <th class="sortable" onclick="sortTable('role')">角色</th>
+                                    <th class="sortable" onclick="sortTable('status')">状态</th>
+                                    <th class="sortable" onclick="sortTable('createdAt')">创建时间</th>
+                                    <th style="width: 150px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- 骨架屏 -->
+                                <tr><td colspan="7"><div class="skeleton skeleton-row"></div></td></tr>
+                                <tr><td colspan="7"><div class="skeleton skeleton-row"></div></td></tr>
+                                <tr><td colspan="7"><div class="skeleton skeleton-row"></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="pagination">
+                        <div class="pagination-info" id="paginationInfo">
+                            显示第 1-10 条，共 0 条
+                        </div>
+                        <div class="pagination-buttons" id="paginationButtons">
+                            <button class="page-btn" onclick="changePage(1)">1</button>
+                            <button class="page-btn active" onclick="changePage(2)">2</button>
+                            <button class="page-btn" onclick="changePage(3)">3</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- ========== 创建/编辑用户模态框 ========== -->
+    <div class="modal-overlay" id="userModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="userModalTitle">创建用户</h2>
+                <button class="modal-close" onclick="closeModal('userModal')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="userForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" for="username">
+                            用户名
+                            <span class="required">*</span>
+                        </label>
+                        <input type="text" id="username" class="form-input" placeholder="请输入用户名" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="email">
+                            邮箱
+                            <span class="required">*</span>
+                        </label>
+                        <input type="email" id="email" class="form-input" placeholder="请输入邮箱" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="role">
+                            角色
+                            <span class="required">*</span>
+                        </label>
+                        <select id="role" class="form-select" required>
+                            <option value="">请选择角色</option>
+                            <option value="admin">管理员</option>
+                            <option value="member">普通成员</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="password">
+                            初始密码
+                            <span class="required">*</span>
+                        </label>
+                        <input type="password" id="password" class="form-input" placeholder="请输入初始密码" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('userModal')">取消</button>
+                    <button type="submit" class="btn btn-primary">确认</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ========== Toast容器 ========== -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- ========== JavaScript ========== -->
+    <script>
+        // ========== 模拟数据 ========== //
+        let users = [
+            { id: 1, username: '系统管理员', email: 'admin@example.com', role: 'admin', status: 'active', createdAt: '2026-01-01' },
+            { id: 2, username: '张三', email: 'zhangsan@example.com', role: 'member', status: 'active', createdAt: '2026-01-15' },
+            { id: 3, username: '李四', email: 'lisi@example.com', role: 'member', status: 'active', createdAt: '2026-02-01' },
+            { id: 4, username: '王五', email: 'wangwu@example.com', role: 'member', status: 'disabled', createdAt: '2026-02-10' },
+            { id: 5, username: '赵六', email: 'zhaoliu@example.com', role: 'member', status: 'active', createdAt: '2026-03-01' }
+        ];
+        
+        let currentPage = 1;
+        let pageSize = 10;
+        let sortField = 'createdAt';
+        let sortOrder = 'desc';
+        let searchKeyword = '';
+        
+        // ========== 工具函数 ========== //
+        
+        function showToast(message, type = 'success', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let iconPath = type === 'success' 
+                ? 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
+                : 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
+            
+            toast.innerHTML = `
+                <svg class="toast-icon" viewBox="0 0 24 24" fill="var(--${type === 'success' ? 'success-green' : 'error-red'})">
+                    <path d="${iconPath}"/>
+                </svg>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            if (duration > 0) {
+                setTimeout(() => toast.remove(), duration);
+            }
+        }
+        
+        function debounce(func, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+        
+        // ========== 渲染表格 ========== //
+        
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            
+            // 筛选和排序
+            let filteredUsers = users.filter(user => {
+                if (!searchKeyword) return true;
+                return user.username.includes(searchKeyword) || user.email.includes(searchKeyword);
+            });
+            
+            // 排序
+            filteredUsers.sort((a, b) => {
+                let aVal = a[sortField];
+                let bVal = b[sortField];
+                if (sortOrder === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+            
+            // 分页
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageUsers = filteredUsers.slice(start, end);
+            
+            // 渲染行
+            tbody.innerHTML = pageUsers.map(user => `
+                <tr>
+                    <td><input type="checkbox"></td>
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td><span class="badge badge-${user.role}">${user.role === 'admin' ? '管理员' : '普通成员'}</span></td>
+                    <td><span class="badge badge-${user.status}">${user.status === 'active' ? '正常' : '已禁用'}</span></td>
+                    <td>${user.createdAt}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-icon" title="编辑" onclick="editUser(${user.id})">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon" title="重置密码" onclick="resetPassword(${user.id})">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon" title="${user.status === 'active' ? '禁用' : '启用'}" onclick="toggleStatus(${user.id})">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // 更新分页信息
+            document.getElementById('paginationInfo').textContent = 
+                `显示第 ${start + 1}-${Math.min(end, filteredUsers.length)} 条，共 ${filteredUsers.length} 条`;
+        }
+        
+        // ========== 用户操作 ========== //
+        
+        function openCreateModal() {
+            document.getElementById('userModalTitle').textContent = '创建用户';
+            document.getElementById('userForm').reset();
+            document.getElementById('userModal').classList.add('show');
+        }
+        
+        function editUser(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            
+            document.getElementById('userModalTitle').textContent = '编辑用户';
+            document.getElementById('username').value = user.username;
+            document.getElementById('email').value = user.email;
+            document.getElementById('role').value = user.role;
+            document.getElementById('userModal').classList.add('show');
+        }
+        
+        function resetPassword(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            
+            if (confirm(`确认重置用户 "${user.username}" 的密码？`)) {
+                setTimeout(() => {
+                    showToast('密码重置成功，新密码已发送到用户邮箱', 'success');
+                }, 300);
+            }
+        }
+        
+        function toggleStatus(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            
+            const action = user.status === 'active' ? '禁用' : '启用';
+            if (confirm(`确认${action}用户 "${user.username}"？`)) {
+                user.status = user.status === 'active' ? 'disabled' : 'active';
+                renderTable();
+                showToast(`用户已${action}`, 'success');
+            }
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+        
+        function sortTable(field) {
+            if (sortField === field) {
+                sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortField = field;
+                sortOrder = 'asc';
+            }
+            renderTable();
+        }
+        
+        function changePage(page) {
+            currentPage = page;
+            renderTable();
+        }
+        
+        function logout() {
+            if (confirm('确认退出登录？')) {
+                localStorage.removeItem('currentUser');
+                window.location.href = 'P01-login.html';
+            }
+        }
+        
+        // ========== 表单提交 ========== //
+        
+        document.getElementById('userForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                role: document.getElementById('role').value,
+                password: document.getElementById('password').value
+            };
+            
+            // 模拟提交
+            setTimeout(() => {
+                users.push({
+                    id: users.length + 1,
+                    ...formData,
+                    status: 'active',
+                    createdAt: new Date().toISOString().split('T')[0]
+                });
+                
+                renderTable();
+                closeModal('userModal');
+                showToast('用户创建成功', 'success');
+            }, 500);
+        });
+        
+        // ========== 搜索 ========== //
+        
+        document.getElementById('searchInput').addEventListener('input', debounce((e) => {
+            searchKeyword = e.target.value;
+            renderTable();
+        }, 300));
+        
+        // ========== 初始化 ========== //
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            // 检查登录状态
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'P01-login.html';
+                return;
+            }
+            
+            // 渲染表格
+            setTimeout(() => renderTable(), 500);
+        });
+    </script>
+</body>
+</html>

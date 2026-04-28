@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务详情 - 任务管理系统</title>
+    <style>
+        /* ========== CSS变量定义 ========== */
+        :root {
+            --primary-color: #409EFF;
+            --success-color: #67C23A;
+            --warning-color: #E6A23C;
+            --danger-color: #F56C6C;
+            --info-color: #909399;
+            --text-primary: #303133;
+            --text-regular: #606266;
+            --text-secondary: #909399;
+            --border-color: #DCDFE6;
+            --bg-color: #F5F7FA;
+            --white: #FFFFFF;
+            --shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+            --radius: 4px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* ========== 布局 ========== */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== 侧边栏 ========== */
+        .sidebar {
+            width: 200px;
+            background: var(--white);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            color: var(--text-regular);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-item:hover {
+            background: var(--bg-color);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background: #ECF5FF;
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        /* ========== 主内容区 ========== */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* ========== 面包屑 ========== */
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* ========== 页面头部 ========== */
+        .page-header {
+            background: var(--white);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header-left h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .page-header-left .task-id {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .page-header-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* ========== 导航标签页 ========== */
+        .nav-tabs {
+            background: var(--white);
+            padding: 0 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 32px;
+        }
+
+        .nav-tab {
+            padding: 16px 0;
+            color: var(--text-regular);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .nav-tab:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* ========== 详情卡片 ========== */
+        .detail-card {
+            background: var(--white);
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 16px;
+        }
+
+        .detail-label {
+            width: 100px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .detail-value {
+            flex: 1;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        /* ========== 徽章 ========== */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 2px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .priority-high {
+            background: #FEF0F0;
+            color: var(--danger-color);
+        }
+
+        .priority-medium {
+            background: #FFF7E6;
+            color: var(--warning-color);
+        }
+
+        .priority-low {
+            background: #ECF5FF;
+            color: var(--primary-color);
+        }
+
+        .status-todo {
+            background: #F0F2F5;
+            color: var(--text-regular);
+        }
+
+        .status-in-progress {
+            background: #ECF5FF;
+            color: var(--primary-color);
+        }
+
+        .status-done {
+            background: #F0F9FF;
+            color: var(--success-color);
+        }
+
+        /* ========== 标签 ========== */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            background: var(--primary-color);
+            color: var(--white);
+            padding: 4px 8px;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+
+        /* ========== 描述内容 ========== */
+        .description-content {
+            padding: 16px;
+            background: #FAFAFA;
+            border-radius: var(--radius);
+            line-height: 1.8;
+        }
+
+        .description-content h1 { font-size: 24px; margin: 16px 0 8px; }
+        .description-content h2 { font-size: 20px; margin: 14px 0 6px; }
+        .description-content h3 { font-size: 16px; margin: 12px 0 4px; }
+        .description-content p { margin: 8px 0; }
+        .description-content ul { margin-left: 20px; }
+        .description-content code {
+            background: #F0F2F5;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-family: monospace;
+        }
+
+        /* ========== 按钮 ========== */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #66B1FF;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background: #F78989;
+        }
+
+        .btn-default {
+            background: var(--white);
+            color: var(--text-regular);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-default:hover {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* ========== 模态框 ========== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius);
+            width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* ========== 指派人选择 ========== */
+        .assignee-search {
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .assignee-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .assignee-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .assignee-item:hover {
+            background: var(--bg-color);
+        }
+
+        .assignee-item:last-child {
+            border-bottom: none;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .assignee-info {
+            flex: 1;
+        }
+
+        .assignee-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .assignee-tasks {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ========== Toast提示 ========== */
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            min-width: 300px;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.success {
+            background: #F0F9FF;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .toast.error {
+            background: #FEF0F0;
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .toast .icon {
+            font-size: 18px;
+            margin-right: 8px;
+        }
+
+        .toast.success .icon {
+            color: var(--success-color);
+        }
+
+        .toast.error .icon {
+            color: var(--danger-color);
+        }
+
+        .toast .message {
+            flex: 1;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- ========== 布局容器 ========== -->
+    <div class="layout">
+        <!-- ========== 侧边栏 ========== -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>任务管理系统</h1>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-item active" onclick="navigateTo('P06-tasks.html')">📋 任务列表</li>
+                <li class="menu-item" onclick="navigateTo('P02-users.html')">👥 用户管理</li>
+                <li class="menu-item" onclick="navigateTo('P04-audit-logs.html')">📜 审计日志</li>
+                <li class="menu-item" onclick="navigateTo('P05-settings.html')">🔒 安全设置</li>
+            </ul>
+        </aside>
+
+        <!-- ========== 主内容区 ========== -->
+        <main class="main-content">
+            <!-- 面包屑导航 -->
+            <div class="breadcrumb">
+                <a href="P06-tasks.html">任务列表</a> / <span id="breadcrumbTitle">任务详情</span>
+            </div>
+
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h2 id="taskTitle">加载中...</h2>
+                    <div class="task-id" id="taskId">#0</div>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn btn-primary" id="editButton" onclick="editTask()">✏️ 编辑</button>
+                    <button class="btn btn-danger" onclick="showDeleteConfirm()">🗑️ 删除</button>
+                </div>
+            </div>
+
+            <!-- 导航标签页 -->
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="switchTab('details')">📝 详情</div>
+                <div class="nav-tab" onclick="switchTab('history')">📜 历史</div>
+            </div>
+
+            <!-- 详情内容 -->
+            <div class="detail-card" id="detailsTab">
+                <!-- 基本信息 -->
+                <div class="detail-section">
+                    <h3 class="section-title">基本信息</h3>
+                    <div class="detail-row">
+                        <div class="detail-label">状态</div>
+                        <div class="detail-value">
+                            <select class="badge" id="statusBadge" onchange="updateStatus(this.value)" style="border: none; cursor: pointer;">
+                                <option value="todo">待办</option>
+                                <option value="in-progress">进行中</option>
+                                <option value="done">已完成</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">优先级</div>
+                        <div class="detail-value">
+                            <span class="badge" id="priorityBadge">-</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">指派人</div>
+                        <div class="detail-value">
+                            <span id="assigneeName">-</span>
+                            <button class="btn btn-default" onclick="showAssignModal()" style="margin-left: 12px; padding: 4px 12px; font-size: 12px;">
+                                重新指派
+                            </button>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">创建人</div>
+                        <div class="detail-value" id="creatorName">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">截止日期</div>
+                        <div class="detail-value" id="dueDate">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">创建时间</div>
+                        <div class="detail-value" id="createdAt">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">最后更新</div>
+                        <div class="detail-value" id="updatedAt">-</div>
+                    </div>
+                </div>
+
+                <!-- 标签 -->
+                <div class="detail-section">
+                    <h3 class="section-title">标签</h3>
+                    <div class="tags" id="taskTags">
+                        <span class="tag">开发</span>
+                    </div>
+                </div>
+
+                <!-- 任务描述 -->
+                <div class="detail-section">
+                    <h3 class="section-title">任务描述</h3>
+                    <div class="description-content" id="taskDescription">
+                        加载中...
+                    </div>
+                </div>
+            </div>
+
+            <!-- 历史记录（默认隐藏） -->
+            <div class="detail-card" id="historyTab" style="display: none;">
+                <p style="text-align: center; color: var(--text-secondary); padding: 40px;">
+                    加载历史记录... 请使用 <a href="#" onclick="navigateToHistory(); return false;" style="color: var(--primary-color);">历史页面</a> 查看详细变更记录
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 指派人模态框 -->
+    <div class="modal-overlay" id="assignModal" onclick="closeModal('assignModal', event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>重新指派任务</h3>
+                <button class="modal-close" onclick="closeModal('assignModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="assignee-search">
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        id="assigneeSearch" 
+                        placeholder="搜索成员..."
+                    >
+                </div>
+                <div class="assignee-list" id="assigneeList">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal-overlay" id="deleteModal" onclick="closeModal('deleteModal', event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+                <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除这个任务吗？此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('deleteModal')">取消</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast提示容器 -->
+    <div id="toastContainer"></div>
+
+    <script>
+        // ========== 工具函数 ========== //
+
+        /**
+         * 防抖函数
+         */
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        /**
+         * Toast提示
+         */
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="icon">${type === 'success' ? '✓' : '✕'}</span>
+                <div class="message">${message}</div>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        /**
+         * 页面导航
+         */
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        /**
+         * 格式化日期
+         */
+        function formatDate(isoString) {
+            if (!isoString) return '-';
+            const date = new Date(isoString);
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        /**
+         * 格式化日期时间
+         */
+        function formatDateTime(isoString) {
+            if (!isoString) return '-';
+            const date = new Date(isoString);
+            return date.toLocaleString('zh-CN');
+        }
+
+        // ========== 数据管理 ========== //
+
+        let currentTask = null;
+        let taskId = null;
+
+        /**
+         * 获取任务ID
+         */
+        function getTaskId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return parseInt(urlParams.get('id'));
+        }
+
+        /**
+         * 加载任务详情
+         */
+        function loadTaskDetail() {
+            taskId = getTaskId();
+            if (!taskId) {
+                showToast('任务ID参数缺失', 'error');
+                setTimeout(() => navigateTo('P06-tasks.html'), 2000);
+                return;
+            }
+
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            currentTask = tasks.find(t => t.id === taskId);
+
+            if (!currentTask) {
+                showToast('任务不存在', 'error');
+                setTimeout(() => navigateTo('P06-tasks.html'), 2000);
+                return;
+            }
+
+            renderTaskDetail();
+        }
+
+        /**
+         * 获取用户信息
+         */
+        function getUser(userId) {
+            const users = {
+                1: { name: '张三', initial: '张' },
+                2: { name: '李四', initial: '李' },
+                3: { name: '王五', initial: '王' }
+            };
+            return users[userId] || { name: '未知用户', initial: '?' };
+        }
+
+        /**
+         * 渲染任务详情
+         */
+        function renderTaskDetail() {
+            const statusText = {
+                'todo': '待办',
+                'in-progress': '进行中',
+                'done': '已完成'
+            };
+            const priorityText = {
+                'high': '高',
+                'medium': '中',
+                'low': '低'
+            };
+
+            // 更新标题
+            document.getElementById('taskTitle').textContent = currentTask.title;
+            document.getElementById('taskId').textContent = `#${currentTask.id}`;
+            document.getElementById('breadcrumbTitle').textContent = currentTask.title;
+
+            // 更新状态
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.value = currentTask.status;
+            statusBadge.className = `badge status-${currentTask.status}`;
+
+            // 更新优先级
+            const priorityBadge = document.getElementById('priorityBadge');
+            priorityBadge.textContent = priorityText[currentTask.priority];
+            priorityBadge.className = `badge priority-${currentTask.priority}`;
+
+            // 更新指派人
+            const assignee = getUser(currentTask.assigneeId);
+            document.getElementById('assigneeName').textContent = assignee.name;
+
+            // 更新创建人
+            const creator = getUser(currentTask.creatorId);
+            document.getElementById('creatorName').textContent = creator.name;
+
+            // 更新日期
+            document.getElementById('dueDate').textContent = formatDate(currentTask.dueDate);
+            document.getElementById('createdAt').textContent = formatDateTime(currentTask.createdAt);
+            document.getElementById('updatedAt').textContent = formatDateTime(currentTask.updatedAt);
+
+            // 更新标签
+            const tagsContainer = document.getElementById('taskTags');
+            if (currentTask.tags && currentTask.tags.length > 0) {
+                tagsContainer.innerHTML = currentTask.tags.map(tag => 
+                    `<span class="tag">${tag}</span>`
+                ).join('');
+            } else {
+                tagsContainer.innerHTML = '<span style="color: var(--text-secondary);">无标签</span>';
+            }
+
+            // 更新描述（简单Markdown渲染）
+            renderDescription(currentTask.description);
+        }
+
+        /**
+         * 渲染描述内容
+         */
+        function renderDescription(markdown) {
+            const container = document.getElementById('taskDescription');
+            let html = markdown
+                .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/`(.+?)`/g, '<code>$1</code>')
+                .replace(/^- (.+)$/gm, '<li>$1</li>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/^(?!<[hli])/gm, '<p>')
+                .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            
+            container.innerHTML = html;
+        }
+
+        /**
+         * 切换标签页
+         */
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+
+            const detailsTab = document.getElementById('detailsTab');
+            const historyTab = document.getElementById('historyTab');
+
+            if (tab === 'details') {
+                tabs[0].classList.add('active');
+                detailsTab.style.display = 'block';
+                historyTab.style.display = 'none';
+            } else {
+                tabs[1].classList.add('active');
+                detailsTab.style.display = 'none';
+                historyTab.style.display = 'block';
+            }
+        }
+
+        /**
+         * 导航到历史页面
+         */
+        function navigateToHistory() {
+            navigateTo(`P09-task-history.html?id=${taskId}`);
+        }
+
+        /**
+         * 更新任务状态
+         */
+        function updateStatus(newStatus) {
+            const oldStatus = currentTask.status;
+            if (oldStatus === newStatus) return;
+
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+
+            if (taskIndex !== -1) {
+                tasks[taskIndex].status = newStatus;
+                tasks[taskIndex].updatedAt = new Date().toISOString();
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+
+                // 记录历史
+                recordHistory('status', '状态', oldStatus, newStatus);
+
+                currentTask.status = newStatus;
+                renderTaskDetail();
+                showToast('状态已更新', 'success');
+            }
+        }
+
+        /**
+         * 编辑任务
+         */
+        function editTask() {
+            showToast('编辑功能开发中', 'error');
+        }
+
+        /**
+         * 显示指派模态框
+         */
+        function showAssignModal() {
+            const modal = document.getElementById('assignModal');
+            modal.classList.add('show');
+            renderAssigneeList();
+        }
+
+        /**
+         * 渲染指派人列表
+         */
+        function renderAssigneeList(searchText = '') {
+            const assignees = [
+                { id: 1, name: '张三', initial: '张', taskCount: 5 },
+                { id: 2, name: '李四', initial: '李', taskCount: 3 },
+                { id: 3, name: '王五', initial: '王', taskCount: 7 }
+            ];
+
+            const filtered = searchText 
+                ? assignees.filter(a => a.name.includes(searchText))
+                : assignees;
+
+            const list = document.getElementById('assigneeList');
+            list.innerHTML = filtered.map(assignee => `
+                <div class="assignee-item" onclick="assignTask(${assignee.id})">
+                    <div class="avatar">${assignee.initial}</div>
+                    <div class="assignee-info">
+                        <div class="assignee-name">${assignee.name}</div>
+                        <div class="assignee-tasks">当前任务: ${assignee.taskCount}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * 指派任务
+         */
+        function assignTask(newAssigneeId) {
+            const oldAssigneeId = currentTask.assigneeId;
+            if (oldAssigneeId === newAssigneeId) {
+                closeModal('assignModal');
+                return;
+            }
+
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+
+            if (taskIndex !== -1) {
+                tasks[taskIndex].assigneeId = newAssigneeId;
+                tasks[taskIndex].updatedAt = new Date().toISOString();
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+
+                // 记录历史
+                const oldAssignee = getUser(oldAssigneeId);
+                const newAssignee = getUser(newAssigneeId);
+                recordHistory('assignee', '指派人', oldAssignee.name, newAssignee.name);
+
+                currentTask.assigneeId = newAssigneeId;
+                renderTaskDetail();
+                showToast('指派成功', 'success');
+                closeModal('assignModal');
+            }
+        }
+
+        /**
+         * 显示删除确认
+         */
+        function showDeleteConfirm() {
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        /**
+         * 确认删除
+         */
+        function confirmDelete() {
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            const filteredTasks = tasks.filter(t => t.id !== taskId);
+            localStorage.setItem('tasks', JSON.stringify(filteredTasks));
+
+            // 记录历史
+            recordHistory('delete', '任务', '存在', '已删除');
+
+            showToast('任务已删除', 'success');
+            setTimeout(() => navigateTo('P06-tasks.html'), 1500);
+        }
+
+        /**
+         * 记录任务历史
+         */
+        function recordHistory(changeType, fieldName, oldValue, newValue) {
+            const taskHistory = JSON.parse(localStorage.getItem('taskHistory') || '[]');
+            taskHistory.unshift({
+                id: Date.now(),
+                taskId: taskId,
+                userId: 1,
+                changeType: changeType,
+                fieldName: fieldName,
+                oldValue: oldValue,
+                newValue: newValue,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('taskHistory', JSON.stringify(taskHistory));
+        }
+
+        /**
+         * 关闭模态框
+         */
+        function closeModal(modalId, event) {
+            if (event && !event.target.classList.contains('modal-overlay')) return;
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // ========== 初始化 ========== //
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTaskDetail();
+
+            // 指派人搜索
+            document.getElementById('assigneeSearch').addEventListener('input', debounce(function() {
+                renderAssigneeList(this.value);
+            }, 200));
+        });
+    </script>
+</body>
+</html>

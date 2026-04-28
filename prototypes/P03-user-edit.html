@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑用户 - 任务管理系统</title>
+    <style>
+        /* ========== CSS变量定义 ========== */
+        :root {
+            --primary-color: #409EFF;
+            --success-color: #67C23A;
+            --warning-color: #E6A23C;
+            --danger-color: #F56C6C;
+            --info-color: #909399;
+            --text-primary: #303133;
+            --text-regular: #606266;
+            --text-secondary: #909399;
+            --border-color: #DCDFE6;
+            --bg-color: #F5F7FA;
+            --white: #FFFFFF;
+            --shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+            --radius: 4px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* ========== 布局 ========== */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== 侧边栏 ========== */
+        .sidebar {
+            width: 200px;
+            background: var(--white);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            color: var(--text-regular);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-item:hover {
+            background: var(--bg-color);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background: #ECF5FF;
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        /* ========== 主内容区 ========== */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* ========== 面包屑 ========== */
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* ========== 页面头部 ========== */
+        .page-header {
+            background: var(--white);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .page-header h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* ========== 表单卡片 ========== */
+        .form-card {
+            background: var(--white);
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-regular);
+            font-weight: 500;
+        }
+
+        .required::before {
+            content: '*';
+            color: var(--danger-color);
+            margin-right: 4px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+        }
+
+        .form-input.error,
+        .form-select.error {
+            border-color: var(--danger-color);
+        }
+
+        .form-input.error:focus,
+        .form-select.error:focus {
+            box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.2);
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .form-help {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        /* ========== 警告提示 ========== */
+        .warning-alert {
+            background: #FFF7E6;
+            border: 1px solid #FFD591;
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .warning-alert.show {
+            display: flex;
+            align-items: center;
+        }
+
+        .warning-alert .icon {
+            color: var(--warning-color);
+            font-size: 18px;
+            margin-right: 8px;
+        }
+
+        .warning-alert .message {
+            color: #AD6800;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        /* ========== 按钮 ========== */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #66B1FF;
+        }
+
+        .btn-primary:disabled {
+            background: #C0C4CC;
+            cursor: not-allowed;
+        }
+
+        .btn-primary.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-primary.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid var(--white);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        .btn-default {
+            background: var(--white);
+            color: var(--text-regular);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-default:hover {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========== Toast提示 ========== */
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            min-width: 300px;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.success {
+            background: #F0F9FF;
+            border-left: 4px solid var(--success-color);
+            color: #67C23A;
+        }
+
+        .toast.error {
+            background: #FEF0F0;
+            border-left: 4px solid var(--danger-color);
+            color: #F56C6C;
+        }
+
+        .toast .icon {
+            font-size: 18px;
+            margin-right: 8px;
+        }
+
+        .toast .message {
+            flex: 1;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- ========== 布局容器 ========== -->
+    <div class="layout">
+        <!-- ========== 侧边栏 ========== -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>任务管理系统</h1>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-item" onclick="navigateTo('P06-tasks.html')">📋 任务列表</li>
+                <li class="menu-item active" onclick="navigateTo('P02-users.html')">👥 用户管理</li>
+                <li class="menu-item" onclick="navigateTo('P04-audit-logs.html')">📜 审计日志</li>
+                <li class="menu-item" onclick="navigateTo('P05-settings.html')">🔒 安全设置</li>
+            </ul>
+        </aside>
+
+        <!-- ========== 主内容区 ========== -->
+        <main class="main-content">
+            <!-- 面包屑导航 -->
+            <div class="breadcrumb">
+                <a href="P02-users.html">用户管理</a> / 编辑用户
+            </div>
+
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h2>编辑用户信息</h2>
+                <p>修改用户的基本信息和角色权限</p>
+            </div>
+
+            <!-- 警告提示 -->
+            <div class="warning-alert" id="lastAdminWarning">
+                <span class="icon">⚠️</span>
+                <div class="message">
+                    <strong>警告：</strong>你是系统最后一个管理员，不能降级为成员
+                </div>
+            </div>
+
+            <!-- 表单卡片 -->
+            <div class="form-card">
+                <form id="editUserForm">
+                    <!-- 姓名 -->
+                    <div class="form-group">
+                        <label class="form-label required">姓名</label>
+                        <input 
+                            type="text" 
+                            class="form-input" 
+                            id="nameInput" 
+                            placeholder="请输入用户姓名"
+                            minlength="2"
+                            maxlength="50"
+                        >
+                        <div class="error-message" id="nameError">姓名长度必须在2-50个字符之间</div>
+                    </div>
+
+                    <!-- 邮箱 -->
+                    <div class="form-group">
+                        <label class="form-label required">邮箱</label>
+                        <input 
+                            type="email" 
+                            class="form-input" 
+                            id="emailInput" 
+                            placeholder="请输入邮箱地址"
+                        >
+                        <div class="error-message" id="emailError">请输入正确的邮箱格式</div>
+                    </div>
+
+                    <!-- 角色 -->
+                    <div class="form-group">
+                        <label class="form-label required">角色</label>
+                        <select class="form-select" id="roleSelector">
+                            <option value="admin">管理员</option>
+                            <option value="member">成员</option>
+                        </select>
+                        <div class="form-help" id="roleHelp">管理员可以管理用户和查看审计日志，成员仅能管理任务</div>
+                        <div class="error-message" id="roleError">不能降级最后一个管理员</div>
+                    </div>
+
+                    <!-- 状态 -->
+                    <div class="form-group">
+                        <label class="form-label required">账号状态</label>
+                        <select class="form-select" id="statusSelector">
+                            <option value="enabled">启用</option>
+                            <option value="disabled">禁用</option>
+                        </select>
+                        <div class="form-help">禁用后用户将无法登录系统</div>
+                    </div>
+
+                    <!-- 按钮组 -->
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary" id="saveButton">保存修改</button>
+                        <button type="button" class="btn btn-default" onclick="navigateTo('P02-users.html')">取消</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast提示容器 -->
+    <div id="toastContainer"></div>
+
+    <script>
+        // ========== 工具函数 ========== //
+
+        /**
+         * 防抖函数
+         */
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        /**
+         * Toast提示
+         */
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="icon">${type === 'success' ? '✓' : '✕'}</span>
+                <div class="message">${message}</div>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        /**
+         * 页面导航
+         */
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        // ========== 数据管理 ========== //
+
+        /**
+         * 从localStorage加载用户数据
+         */
+        function loadUserData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('id');
+            
+            if (!userId) {
+                showToast('缺少用户ID参数', 'error');
+                setTimeout(() => navigateTo('P02-users.html'), 2000);
+                return null;
+            }
+
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.id === parseInt(userId));
+            
+            if (!user) {
+                showToast('用户不存在', 'error');
+                setTimeout(() => navigateTo('P02-users.html'), 2000);
+                return null;
+            }
+
+            return user;
+        }
+
+        /**
+         * 检查是否为最后一个管理员
+         */
+        function isLastAdmin() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const adminCount = users.filter(u => u.role === 'admin' && u.status === 'enabled').length;
+            return adminCount === 1;
+        }
+
+        // ========== 表单处理 ========== //
+
+        let currentUser = null;
+
+        /**
+         * 初始化表单数据
+         */
+        function initForm() {
+            currentUser = loadUserData();
+            if (!currentUser) return;
+
+            // 填充表单
+            document.getElementById('nameInput').value = currentUser.name;
+            document.getElementById('emailInput').value = currentUser.email;
+            document.getElementById('roleSelector').value = currentUser.role;
+            document.getElementById('statusSelector').value = currentUser.status;
+
+            // 检查是否为最后管理员
+            if (currentUser.role === 'admin' && isLastAdmin()) {
+                const memberOption = document.querySelector('#roleSelector option[value="member"]');
+                memberOption.disabled = true;
+                document.getElementById('lastAdminWarning').classList.add('show');
+            }
+
+            // 绑定角色变更监听
+            document.getElementById('roleSelector').addEventListener('change', handleRoleChange);
+        }
+
+        /**
+         * 处理角色变更
+         */
+        function handleRoleChange(e) {
+            const newRole = e.target.value;
+            const roleError = document.getElementById('roleError');
+            const warningAlert = document.getElementById('lastAdminWarning');
+            
+            if (currentUser.role === 'admin' && newRole === 'member' && isLastAdmin()) {
+                // 阻止降级
+                e.target.value = 'admin';
+                roleError.classList.add('show');
+                warningAlert.classList.add('show');
+                showToast('不能降级最后一个管理员', 'error');
+            } else {
+                roleError.classList.remove('show');
+                if (newRole !== 'admin' || !isLastAdmin()) {
+                    warningAlert.classList.remove('show');
+                }
+            }
+        }
+
+        /**
+         * 验证姓名
+         */
+        function validateName() {
+            const nameInput = document.getElementById('nameInput');
+            const nameError = document.getElementById('nameError');
+            const name = nameInput.value.trim();
+            
+            if (name.length < 2 || name.length > 50) {
+                nameInput.classList.add('error');
+                nameError.classList.add('show');
+                return false;
+            }
+            
+            nameInput.classList.remove('error');
+            nameError.classList.remove('show');
+            return true;
+        }
+
+        /**
+         * 验证邮箱
+         */
+        function validateEmail() {
+            const emailInput = document.getElementById('emailInput');
+            const emailError = document.getElementById('emailError');
+            const email = emailInput.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!emailRegex.test(email)) {
+                emailInput.classList.add('error');
+                emailError.textContent = '请输入正确的邮箱格式';
+                emailError.classList.add('show');
+                return false;
+            }
+
+            // 检查邮箱唯一性（排除当前用户）
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const emailExists = users.some(u => u.email === email && u.id !== currentUser.id);
+            
+            if (emailExists) {
+                emailInput.classList.add('error');
+                emailError.textContent = '该邮箱已被使用';
+                emailError.classList.add('show');
+                return false;
+            }
+            
+            emailInput.classList.remove('error');
+            emailError.classList.remove('show');
+            return true;
+        }
+
+        /**
+         * 表单提交
+         */
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            // 验证所有字段
+            const nameValid = validateName();
+            const emailValid = validateEmail();
+            
+            if (!nameValid || !emailValid) {
+                showToast('请修正表单错误', 'error');
+                return;
+            }
+
+            // 获取表单数据
+            const formData = {
+                name: document.getElementById('nameInput').value.trim(),
+                email: document.getElementById('emailInput').value.trim(),
+                role: document.getElementById('roleSelector').value,
+                status: document.getElementById('statusSelector').value,
+            };
+
+            // 显示loading状态
+            const saveButton = document.getElementById('saveButton');
+            saveButton.classList.add('loading');
+            saveButton.disabled = true;
+
+            // 模拟API请求
+            setTimeout(() => {
+                try {
+                    // 更新用户数据
+                    const users = JSON.parse(localStorage.getItem('users') || '[]');
+                    const userIndex = users.findIndex(u => u.id === currentUser.id);
+                    
+                    if (userIndex !== -1) {
+                        users[userIndex] = {
+                            ...users[userIndex],
+                            ...formData,
+                            updatedAt: new Date().toISOString()
+                        };
+                        localStorage.setItem('users', JSON.stringify(users));
+
+                        // 记录审计日志
+                        const auditLogs = JSON.parse(localStorage.getItem('auditLogs') || '[]');
+                        auditLogs.unshift({
+                            id: Date.now(),
+                            userId: 1, // 当前登录用户ID
+                            username: 'admin',
+                            action: '更新用户',
+                            resource: '用户管理',
+                            resourceId: currentUser.id,
+                            timestamp: new Date().toISOString(),
+                            status: 'success',
+                            metadata: {
+                                changes: formData
+                            }
+                        });
+                        localStorage.setItem('auditLogs', JSON.stringify(auditLogs));
+
+                        showToast('用户信息更新成功', 'success');
+                        
+                        setTimeout(() => {
+                            navigateTo('P02-users.html');
+                        }, 1500);
+                    }
+                } catch (error) {
+                    showToast('更新失败，请重试', 'error');
+                    saveButton.classList.remove('loading');
+                    saveButton.disabled = false;
+                }
+            }, 1000);
+        }
+
+        // ========== 事件绑定 ========== //
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化表单
+            initForm();
+
+            // 绑定表单提交
+            document.getElementById('editUserForm').addEventListener('submit', handleSubmit);
+
+            // 实时验证
+            document.getElementById('nameInput').addEventListener('blur', validateName);
+            document.getElementById('emailInput').addEventListener('blur', debounce(validateEmail, 500));
+        });
+    </script>
+</body>
+</html>

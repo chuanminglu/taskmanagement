@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全设置 - 任务管理系统</title>
+    <style>
+        /* ========== CSS变量定义 ========== */
+        :root {
+            --primary-color: #409EFF;
+            --success-color: #67C23A;
+            --warning-color: #E6A23C;
+            --danger-color: #F56C6C;
+            --info-color: #909399;
+            --text-primary: #303133;
+            --text-regular: #606266;
+            --text-secondary: #909399;
+            --border-color: #DCDFE6;
+            --bg-color: #F5F7FA;
+            --white: #FFFFFF;
+            --shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+            --radius: 4px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* ========== 布局 ========== */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== 侧边栏 ========== */
+        .sidebar {
+            width: 200px;
+            background: var(--white);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            color: var(--text-regular);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-item:hover {
+            background: var(--bg-color);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background: #ECF5FF;
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        /* ========== 主内容区 ========== */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* ========== 页面头部 ========== */
+        .page-header {
+            background: var(--white);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .page-header h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* ========== 表单卡片 ========== */
+        .form-card {
+            background: var(--white);
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            max-width: 600px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-regular);
+            font-weight: 500;
+        }
+
+        .required::before {
+            content: '*';
+            color: var(--danger-color);
+            margin-right: 4px;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 40px 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+        }
+
+        .form-input.error {
+            border-color: var(--danger-color);
+        }
+
+        .form-input.error:focus {
+            box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.2);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 18px;
+            user-select: none;
+        }
+
+        .password-toggle:hover {
+            color: var(--text-primary);
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .form-help {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        /* ========== 密码强度指示器 ========== */
+        .password-strength {
+            margin-top: 12px;
+        }
+
+        .strength-bar-container {
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s;
+            border-radius: 3px;
+        }
+
+        .strength-bar.weak {
+            width: 33%;
+            background: var(--danger-color);
+        }
+
+        .strength-bar.medium {
+            width: 66%;
+            background: var(--warning-color);
+        }
+
+        .strength-bar.strong {
+            width: 100%;
+            background: var(--success-color);
+        }
+
+        .strength-text {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .strength-text.weak {
+            color: var(--danger-color);
+        }
+
+        .strength-text.medium {
+            color: var(--warning-color);
+        }
+
+        .strength-text.strong {
+            color: var(--success-color);
+        }
+
+        /* ========== 密码要求列表 ========== */
+        .password-requirements {
+            background: #F5F7FA;
+            padding: 12px;
+            border-radius: var(--radius);
+            margin-top: 12px;
+        }
+
+        .password-requirements h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: var(--text-regular);
+        }
+
+        .requirement-list {
+            list-style: none;
+            font-size: 13px;
+        }
+
+        .requirement-item {
+            padding: 4px 0;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .requirement-item::before {
+            content: '○';
+        }
+
+        .requirement-item.met {
+            color: var(--success-color);
+        }
+
+        .requirement-item.met::before {
+            content: '✓';
+        }
+
+        /* ========== 信息提示框 ========== */
+        .info-alert {
+            background: #ECF5FF;
+            border: 1px solid #B3D8FF;
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-alert .icon {
+            color: var(--primary-color);
+            font-size: 18px;
+            margin-right: 8px;
+        }
+
+        .info-alert .message {
+            color: #217FB0;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        /* ========== 按钮 ========== */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #66B1FF;
+        }
+
+        .btn-primary:disabled {
+            background: #C0C4CC;
+            cursor: not-allowed;
+        }
+
+        .btn-primary.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-primary.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid var(--white);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-default {
+            background: var(--white);
+            color: var(--text-regular);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-default:hover {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* ========== Toast提示 ========== */
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            min-width: 300px;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.success {
+            background: #F0F9FF;
+            border-left: 4px solid var(--success-color);
+            color: #67C23A;
+        }
+
+        .toast.error {
+            background: #FEF0F0;
+            border-left: 4px solid var(--danger-color);
+            color: #F56C6C;
+        }
+
+        .toast .icon {
+            font-size: 18px;
+            margin-right: 8px;
+        }
+
+        .toast .message {
+            flex: 1;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- ========== 布局容器 ========== -->
+    <div class="layout">
+        <!-- ========== 侧边栏 ========== -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>任务管理系统</h1>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-item" onclick="navigateTo('P06-tasks.html')">📋 任务列表</li>
+                <li class="menu-item" onclick="navigateTo('P02-users.html')">👥 用户管理</li>
+                <li class="menu-item" onclick="navigateTo('P04-audit-logs.html')">📜 审计日志</li>
+                <li class="menu-item active">🔒 安全设置</li>
+            </ul>
+        </aside>
+
+        <!-- ========== 主内容区 ========== -->
+        <main class="main-content">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h2>安全设置</h2>
+                <p>修改你的登录密码以保护账号安全</p>
+            </div>
+
+            <!-- 信息提示 -->
+            <div class="info-alert">
+                <span class="icon">ℹ️</span>
+                <div class="message">
+                    为了账号安全，修改密码后将自动退出登录，需要使用新密码重新登录
+                </div>
+            </div>
+
+            <!-- 表单卡片 -->
+            <div class="form-card">
+                <form id="passwordForm">
+                    <!-- 当前密码 -->
+                    <div class="form-group">
+                        <label class="form-label required">当前密码</label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                class="form-input" 
+                                id="oldPassword" 
+                                placeholder="请输入当前密码"
+                                autocomplete="current-password"
+                            >
+                            <span class="password-toggle" onclick="togglePassword('oldPassword')">👁️</span>
+                        </div>
+                        <div class="error-message" id="oldPasswordError">当前密码不正确</div>
+                    </div>
+
+                    <!-- 新密码 -->
+                    <div class="form-group">
+                        <label class="form-label required">新密码</label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                class="form-input" 
+                                id="newPassword" 
+                                placeholder="请输入新密码"
+                                autocomplete="new-password"
+                            >
+                            <span class="password-toggle" onclick="togglePassword('newPassword')">👁️</span>
+                        </div>
+                        <div class="error-message" id="newPasswordError">新密码不能与当前密码相同</div>
+                        
+                        <!-- 密码强度指示器 -->
+                        <div class="password-strength" id="passwordStrength" style="display: none;">
+                            <div class="strength-bar-container">
+                                <div class="strength-bar" id="strengthBar"></div>
+                            </div>
+                            <div class="strength-text" id="strengthText"></div>
+                        </div>
+
+                        <!-- 密码要求 -->
+                        <div class="password-requirements">
+                            <h4>密码要求：</h4>
+                            <ul class="requirement-list">
+                                <li class="requirement-item" id="req-length">至少8个字符</li>
+                                <li class="requirement-item" id="req-uppercase">包含大写字母</li>
+                                <li class="requirement-item" id="req-lowercase">包含小写字母</li>
+                                <li class="requirement-item" id="req-number">包含数字</li>
+                                <li class="requirement-item" id="req-special">包含特殊字符 (!@#$%^&*)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 确认密码 -->
+                    <div class="form-group">
+                        <label class="form-label required">确认新密码</label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                class="form-input" 
+                                id="confirmPassword" 
+                                placeholder="请再次输入新密码"
+                                autocomplete="new-password"
+                            >
+                            <span class="password-toggle" onclick="togglePassword('confirmPassword')">👁️</span>
+                        </div>
+                        <div class="error-message" id="confirmPasswordError">两次输入的密码不一致</div>
+                    </div>
+
+                    <!-- 按钮组 -->
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary" id="submitButton">修改密码</button>
+                        <button type="button" class="btn btn-default" onclick="navigateTo('P06-tasks.html')">取消</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast提示容器 -->
+    <div id="toastContainer"></div>
+
+    <script>
+        // ========== 工具函数 ========== //
+
+        /**
+         * 防抖函数
+         */
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        /**
+         * Toast提示
+         */
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="icon">${type === 'success' ? '✓' : '✕'}</span>
+                <div class="message">${message}</div>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        /**
+         * 页面导航
+         */
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        /**
+         * 切换密码显示/隐藏
+         */
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        // ========== 密码强度检测 ========== //
+
+        /**
+         * 计算密码强度
+         */
+        function calculatePasswordStrength(password) {
+            if (!password) return { score: 0, level: 'weak' };
+            
+            let score = 0;
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+            };
+            
+            // 更新要求列表UI
+            Object.keys(requirements).forEach(key => {
+                const elem = document.getElementById(`req-${key}`);
+                if (elem) {
+                    elem.classList.toggle('met', requirements[key]);
+                }
+            });
+            
+            // 计算分数
+            if (requirements.length) score += 20;
+            if (requirements.uppercase) score += 20;
+            if (requirements.lowercase) score += 20;
+            if (requirements.number) score += 20;
+            if (requirements.special) score += 20;
+            
+            // 额外奖励
+            if (password.length >= 12) score += 10;
+            if (password.length >= 16) score += 10;
+            
+            // 确定等级
+            let level = 'weak';
+            if (score >= 80) level = 'strong';
+            else if (score >= 60) level = 'medium';
+            
+            return { score, level, requirements };
+        }
+
+        /**
+         * 更新密码强度UI
+         */
+        function updatePasswordStrength() {
+            const password = document.getElementById('newPassword').value;
+            const strengthContainer = document.getElementById('passwordStrength');
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            if (!password) {
+                strengthContainer.style.display = 'none';
+                return;
+            }
+            
+            strengthContainer.style.display = 'block';
+            const { score, level, requirements } = calculatePasswordStrength(password);
+            
+            // 更新进度条
+            strengthBar.className = `strength-bar ${level}`;
+            
+            // 更新文本
+            const levelText = {
+                weak: '弱',
+                medium: '中',
+                strong: '强'
+            };
+            
+            const levelIcon = {
+                weak: '⚠️',
+                medium: '💡',
+                strong: '✓'
+            };
+            
+            strengthText.className = `strength-text ${level}`;
+            strengthText.textContent = `${levelIcon[level]} 密码强度：${levelText[level]}`;
+        }
+
+        // ========== 表单验证 ========== //
+
+        /**
+         * 验证当前密码
+         */
+        function validateOldPassword() {
+            const oldPassword = document.getElementById('oldPassword').value;
+            const oldPasswordError = document.getElementById('oldPasswordError');
+            const oldPasswordInput = document.getElementById('oldPassword');
+            
+            // 从localStorage获取当前用户密码（实际应用中应该后端验证）
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const isValid = oldPassword && oldPassword === (currentUser.password || 'admin123');
+            
+            if (!isValid) {
+                oldPasswordInput.classList.add('error');
+                oldPasswordError.classList.add('show');
+            } else {
+                oldPasswordInput.classList.remove('error');
+                oldPasswordError.classList.remove('show');
+            }
+            
+            return isValid;
+        }
+
+        /**
+         * 验证新密码
+         */
+        function validateNewPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPasswordError = document.getElementById('newPasswordError');
+            const newPasswordInput = document.getElementById('newPassword');
+            
+            const { score, level, requirements } = calculatePasswordStrength(newPassword);
+            
+            // 新密码不能与旧密码相同
+            if (newPassword && newPassword === oldPassword) {
+                newPasswordInput.classList.add('error');
+                newPasswordError.textContent = '新密码不能与当前密码相同';
+                newPasswordError.classList.add('show');
+                return false;
+            }
+            
+            // 密码强度必须达到中等以上
+            if (newPassword && level === 'weak') {
+                newPasswordInput.classList.add('error');
+                newPasswordError.textContent = '密码强度太弱，请满足更多要求';
+                newPasswordError.classList.add('show');
+                return false;
+            }
+            
+            newPasswordInput.classList.remove('error');
+            newPasswordError.classList.remove('show');
+            return true;
+        }
+
+        /**
+         * 验证确认密码
+         */
+        function validateConfirmPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const confirmPasswordError = document.getElementById('confirmPasswordError');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            
+            const isValid = confirmPassword && confirmPassword === newPassword;
+            
+            if (!isValid) {
+                confirmPasswordInput.classList.add('error');
+                confirmPasswordError.classList.add('show');
+            } else {
+                confirmPasswordInput.classList.remove('error');
+                confirmPasswordError.classList.remove('show');
+            }
+            
+            return isValid;
+        }
+
+        /**
+         * 表单提交
+         */
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            // 验证所有字段
+            const oldPasswordValid = validateOldPassword();
+            const newPasswordValid = validateNewPassword();
+            const confirmPasswordValid = validateConfirmPassword();
+            
+            if (!oldPasswordValid || !newPasswordValid || !confirmPasswordValid) {
+                showToast('请修正表单错误', 'error');
+                return;
+            }
+            
+            // 显示loading状态
+            const submitButton = document.getElementById('submitButton');
+            submitButton.classList.add('loading');
+            submitButton.disabled = true;
+            
+            // 模拟API请求
+            setTimeout(() => {
+                try {
+                    const newPassword = document.getElementById('newPassword').value;
+                    
+                    // 更新用户密码
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                    currentUser.password = newPassword;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    // 记录审计日志
+                    const auditLogs = JSON.parse(localStorage.getItem('auditLogs') || '[]');
+                    auditLogs.unshift({
+                        id: Date.now(),
+                        userId: currentUser.id || 1,
+                        username: currentUser.username || 'admin',
+                        action: '修改密码',
+                        resource: '安全设置',
+                        resourceId: currentUser.id || 1,
+                        timestamp: new Date().toISOString(),
+                        status: 'success',
+                        ipAddress: '127.0.0.1',
+                        metadata: {}
+                    });
+                    localStorage.setItem('auditLogs', JSON.stringify(auditLogs));
+                    
+                    showToast('密码修改成功，即将退出登录...', 'success');
+                    
+                    // 2秒后退出登录
+                    setTimeout(() => {
+                        localStorage.removeItem('currentUser');
+                        navigateTo('P01-login.html');
+                    }, 2000);
+                    
+                } catch (error) {
+                    showToast('修改失败，请重试', 'error');
+                    submitButton.classList.remove('loading');
+                    submitButton.disabled = false;
+                }
+            }, 1000);
+        }
+
+        // ========== 事件绑定 ========== //
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定表单提交
+            document.getElementById('passwordForm').addEventListener('submit', handleSubmit);
+            
+            // 实时密码强度检测
+            document.getElementById('newPassword').addEventListener('input', debounce(function() {
+                updatePasswordStrength();
+                validateNewPassword();
+            }, 200));
+            
+            // 字段失焦验证
+            document.getElementById('oldPassword').addEventListener('blur', validateOldPassword);
+            document.getElementById('newPassword').addEventListener('blur', validateNewPassword);
+            document.getElementById('confirmPassword').addEventListener('blur', validateConfirmPassword);
+            
+            // 确认密码实时验证
+            document.getElementById('confirmPassword').addEventListener('input', debounce(validateConfirmPassword, 300));
+        });
+    </script>
+</body>
+</html>

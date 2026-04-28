@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审计日志 - 任务管理系统</title>
+    <style>
+        /* ========== CSS变量定义 ========== */
+        :root {
+            --primary-color: #409EFF;
+            --success-color: #67C23A;
+            --warning-color: #E6A23C;
+            --danger-color: #F56C6C;
+            --info-color: #909399;
+            --text-primary: #303133;
+            --text-regular: #606266;
+            --text-secondary: #909399;
+            --border-color: #DCDFE6;
+            --bg-color: #F5F7FA;
+            --white: #FFFFFF;
+            --shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+            --radius: 4px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* ========== 布局 ========== */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== 侧边栏 ========== */
+        .sidebar {
+            width: 200px;
+            background: var(--white);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            color: var(--text-regular);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-item:hover {
+            background: var(--bg-color);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background: #ECF5FF;
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        /* ========== 主内容区 ========== */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* ========== 页面头部 ========== */
+        .page-header {
+            background: var(--white);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h2 {
+            font-size: 20px;
+        }
+
+        /* ========== 筛选面板 ========== */
+        .filter-panel {
+            background: var(--white);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .filter-panel.collapsed .filter-content {
+            display: none;
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .filter-header h3 {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .filter-toggle {
+            color: var(--primary-color);
+            font-size: 14px;
+        }
+
+        .filter-content {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: var(--text-regular);
+            margin-bottom: 8px;
+        }
+
+        .filter-input,
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .filter-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .filter-tags {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-tag {
+            background: #F0F2F5;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-tag .remove {
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .filter-tag .remove:hover {
+            color: var(--danger-color);
+        }
+
+        /* ========== 表格 ========== */
+        .table-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-count {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-color);
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-regular);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #F5F7FA;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+
+        .status-success {
+            background: #F0F9FF;
+            color: var(--success-color);
+        }
+
+        .status-error {
+            background: #FEF0F0;
+            color: var(--danger-color);
+        }
+
+        .action-link {
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        /* ========== 分页 ========== */
+        .pagination {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .page-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .page-btn.active {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        /* ========== 按钮 ========== */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #66B1FF;
+        }
+
+        .btn-default {
+            background: var(--white);
+            color: var(--text-regular);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-default:hover {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* ========== 模态框 ========== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius);
+            width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 16px;
+        }
+
+        .info-label {
+            width: 100px;
+            font-weight: 500;
+            color: var(--text-regular);
+        }
+
+        .info-value {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .code-block {
+            background: #F5F7FA;
+            padding: 12px;
+            border-radius: var(--radius);
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 8px;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* ========== Toast提示 ========== */
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            min-width: 300px;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.success {
+            background: #F0F9FF;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .toast .icon {
+            font-size: 18px;
+            margin-right: 8px;
+            color: var(--success-color);
+        }
+
+        .toast .message {
+            flex: 1;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- ========== 布局容器 ========== -->
+    <div class="layout">
+        <!-- ========== 侧边栏 ========== -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>任务管理系统</h1>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-item" onclick="navigateTo('P06-tasks.html')">📋 任务列表</li>
+                <li class="menu-item" onclick="navigateTo('P02-users.html')">👥 用户管理</li>
+                <li class="menu-item active">📜 审计日志</li>
+                <li class="menu-item" onclick="navigateTo('P05-settings.html')">🔒 安全设置</li>
+            </ul>
+        </aside>
+
+        <!-- ========== 主内容区 ========== -->
+        <main class="main-content">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h2>审计日志</h2>
+            </div>
+
+            <!-- 筛选面板 -->
+            <div class="filter-panel" id="filterPanel">
+                <div class="filter-header" onclick="toggleFilter()">
+                    <h3>🔍 筛选条件</h3>
+                    <span class="filter-toggle" id="filterToggle">收起</span>
+                </div>
+                <div class="filter-content">
+                    <div class="filter-group">
+                        <label class="filter-label">开始日期</label>
+                        <input type="date" class="filter-input" id="startDate">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">结束日期</label>
+                        <input type="date" class="filter-input" id="endDate">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">用户</label>
+                        <select class="filter-select" id="userFilter">
+                            <option value="">全部用户</option>
+                            <option value="admin">admin</option>
+                            <option value="zhangsan">张三</option>
+                            <option value="lisi">李四</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">操作类型</label>
+                        <select class="filter-select" id="actionFilter">
+                            <option value="">全部操作</option>
+                            <option value="登录">登录</option>
+                            <option value="创建用户">创建用户</option>
+                            <option value="更新用户">更新用户</option>
+                            <option value="创建任务">创建任务</option>
+                            <option value="更新任务">更新任务</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">状态</label>
+                        <select class="filter-select" id="statusFilter">
+                            <option value="">全部状态</option>
+                            <option value="success">成功</option>
+                            <option value="error">失败</option>
+                        </select>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn btn-primary" onclick="applyFilter()">🔍 搜索</button>
+                        <button class="btn btn-default" onclick="clearFilter()">重置</button>
+                    </div>
+                </div>
+                <div class="filter-tags" id="filterTags"></div>
+            </div>
+
+            <!-- 表格卡片 -->
+            <div class="table-card">
+                <div class="table-header">
+                    <div class="log-count" id="logCount">共找到 0 条记录</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>用户</th>
+                            <th>操作</th>
+                            <th>资源</th>
+                            <th>状态</th>
+                            <th>IP地址</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody">
+                        <!-- 数据由JavaScript动态填充 -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <div class="pagination-info" id="paginationInfo">第 1-20 条，共 0 条</div>
+                    <div class="pagination-controls">
+                        <button class="page-btn" id="prevBtn" onclick="prevPage()">上一页</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn" id="nextBtn" onclick="nextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 日志详情模态框 -->
+    <div class="modal-overlay" id="logDetailModal" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>日志详情</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="logDetailBody">
+                <!-- 详情内容由JavaScript动态填充 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast提示容器 -->
+    <div id="toastContainer"></div>
+
+    <script>
+        // ========== 工具函数 ========== //
+
+        /**
+         * Toast提示
+         */
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="icon">✓</span>
+                <div class="message">${message}</div>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        /**
+         * 页面导航
+         */
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        /**
+         * 格式化日期时间
+         */
+        function formatDateTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // ========== 数据管理 ========== //
+
+        let currentPage = 1;
+        const pageSize = 20;
+        let filteredLogs = [];
+
+        /**
+         * 初始化审计日志数据
+         */
+        function initAuditLogs() {
+            let logs = JSON.parse(localStorage.getItem('auditLogs') || '[]');
+            
+            // 如果没有数据，生成模拟数据
+            if (logs.length === 0) {
+                logs = generateMockLogs();
+                localStorage.setItem('auditLogs', JSON.stringify(logs));
+            }
+            
+            return logs;
+        }
+
+        /**
+         * 生成模拟审计日志
+         */
+        function generateMockLogs() {
+            const mockLogs = [];
+            const actions = ['登录', '创建用户', '更新用户', '创建任务', '更新任务', '删除任务'];
+            const users = ['admin', 'zhangsan', 'lisi'];
+            const statuses = ['success', 'error'];
+            
+            for (let i = 0; i < 50; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - Math.floor(i / 5));
+                
+                mockLogs.push({
+                    id: i + 1,
+                    userId: Math.floor(Math.random() * 3) + 1,
+                    username: users[Math.floor(Math.random() * users.length)],
+                    action: actions[Math.floor(Math.random() * actions.length)],
+                    resource: '用户管理',
+                    resourceId: Math.floor(Math.random() * 10) + 1,
+                    ipAddress: `192.168.1.${Math.floor(Math.random() * 255)}`,
+                    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                    status: statuses[Math.floor(Math.random() * statuses.length)],
+                    timestamp: date.toISOString(),
+                    duration: Math.floor(Math.random() * 1000),
+                    metadata: {
+                        changes: { field: 'value' }
+                    }
+                });
+            }
+            
+            return mockLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        }
+
+        /**
+         * 加载日志列表
+         */
+        function loadLogs() {
+            const logs = initAuditLogs();
+            filteredLogs = applyFilters(logs);
+            renderLogs();
+            updatePagination();
+        }
+
+        /**
+         * 应用筛选条件
+         */
+        function applyFilters(logs) {
+            let filtered = [...logs];
+            
+            // 时间筛选
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (startDate) {
+                filtered = filtered.filter(log => 
+                    new Date(log.timestamp) >= new Date(startDate)
+                );
+            }
+            
+            if (endDate) {
+                filtered = filtered.filter(log => 
+                    new Date(log.timestamp) <= new Date(endDate + ' 23:59:59')
+                );
+            }
+            
+            // 用户筛选
+            const userFilter = document.getElementById('userFilter').value;
+            if (userFilter) {
+                filtered = filtered.filter(log => log.username === userFilter);
+            }
+            
+            // 操作类型筛选
+            const actionFilter = document.getElementById('actionFilter').value;
+            if (actionFilter) {
+                filtered = filtered.filter(log => log.action === actionFilter);
+            }
+            
+            // 状态筛选
+            const statusFilter = document.getElementById('statusFilter').value;
+            if (statusFilter) {
+                filtered = filtered.filter(log => log.status === statusFilter);
+            }
+            
+            return filtered;
+        }
+
+        /**
+         * 渲染日志列表
+         */
+        function renderLogs() {
+            const tbody = document.getElementById('logTableBody');
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageLogs = filteredLogs.slice(start, end);
+            
+            tbody.innerHTML = pageLogs.map(log => `
+                <tr>
+                    <td>${formatDateTime(log.timestamp)}</td>
+                    <td>${log.username}</td>
+                    <td>${log.action}</td>
+                    <td>${log.resource}</td>
+                    <td>
+                        <span class="status-badge status-${log.status}">
+                            ${log.status === 'success' ? '成功' : '失败'}
+                        </span>
+                    </td>
+                    <td>${log.ipAddress}</td>
+                    <td>
+                        <a class="action-link" onclick="viewLogDetail(${log.id})">查看详情</a>
+                    </td>
+                </tr>
+            `).join('');
+            
+            document.getElementById('logCount').textContent = `共找到 ${filteredLogs.length} 条记录`;
+        }
+
+        /**
+         * 更新分页信息
+         */
+        function updatePagination() {
+            const total = filteredLogs.length;
+            const start = Math.min((currentPage - 1) * pageSize + 1, total);
+            const end = Math.min(currentPage * pageSize, total);
+            
+            document.getElementById('paginationInfo').textContent = 
+                `第 ${start}-${end} 条，共 ${total} 条`;
+            
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = end >= total;
+        }
+
+        /**
+         * 上一页
+         */
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderLogs();
+                updatePagination();
+            }
+        }
+
+        /**
+         * 下一页
+         */
+        function nextPage() {
+            const maxPage = Math.ceil(filteredLogs.length / pageSize);
+            if (currentPage < maxPage) {
+                currentPage++;
+                renderLogs();
+                updatePagination();
+            }
+        }
+
+        /**
+         * 应用筛选
+         */
+        function applyFilter() {
+            currentPage = 1;
+            loadLogs();
+            updateFilterTags();
+        }
+
+        /**
+         * 清除筛选
+         */
+        function clearFilter() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('userFilter').value = '';
+            document.getElementById('actionFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            
+            currentPage = 1;
+            loadLogs();
+            updateFilterTags();
+        }
+
+        /**
+         * 更新筛选标签
+         */
+        function updateFilterTags() {
+            const tagsContainer = document.getElementById('filterTags');
+            const tags = [];
+            
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const userFilter = document.getElementById('userFilter').value;
+            const actionFilter = document.getElementById('actionFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            if (startDate || endDate) {
+                tags.push(`时间: ${startDate || '开始'} ~ ${endDate || '结束'}`);
+            }
+            if (userFilter) tags.push(`用户: ${userFilter}`);
+            if (actionFilter) tags.push(`操作: ${actionFilter}`);
+            if (statusFilter) tags.push(`状态: ${statusFilter === 'success' ? '成功' : '失败'}`);
+            
+            tagsContainer.innerHTML = tags.map((tag, index) => `
+                <div class="filter-tag">
+                    ${tag}
+                    <span class="remove" onclick="removeTag(${index})">×</span>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * 移除筛选标签
+         */
+        function removeTag(index) {
+            clearFilter();
+        }
+
+        /**
+         * 切换筛选面板
+         */
+        function toggleFilter() {
+            const panel = document.getElementById('filterPanel');
+            const toggle = document.getElementById('filterToggle');
+            
+            panel.classList.toggle('collapsed');
+            toggle.textContent = panel.classList.contains('collapsed') ? '展开' : '收起';
+        }
+
+        /**
+         * 查看日志详情
+         */
+        function viewLogDetail(logId) {
+            const logs = initAuditLogs();
+            const log = logs.find(l => l.id === logId);
+            
+            if (!log) return;
+            
+            const detailBody = document.getElementById('logDetailBody');
+            detailBody.innerHTML = `
+                <div class="info-row">
+                    <div class="info-label">日志ID:</div>
+                    <div class="info-value">${log.id}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">时间:</div>
+                    <div class="info-value">${formatDateTime(log.timestamp)}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">用户:</div>
+                    <div class="info-value">${log.username} (ID: ${log.userId})</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">操作:</div>
+                    <div class="info-value">${log.action}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">资源:</div>
+                    <div class="info-value">${log.resource} (ID: ${log.resourceId})</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">状态:</div>
+                    <div class="info-value">
+                        <span class="status-badge status-${log.status}">
+                            ${log.status === 'success' ? '成功' : '失败'}
+                        </span>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">IP地址:</div>
+                    <div class="info-value">${log.ipAddress}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">User Agent:</div>
+                    <div class="info-value">${log.userAgent}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">执行时长:</div>
+                    <div class="info-value">${log.duration}ms</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">元数据:</div>
+                    <div class="info-value">
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyJSON()">复制</button>
+                            <pre id="jsonContent">${JSON.stringify(log.metadata, null, 2)}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('logDetailModal').classList.add('show');
+        }
+
+        /**
+         * 关闭模态框
+         */
+        function closeModal(event) {
+            if (event && event.target.classList.contains('modal')) return;
+            document.getElementById('logDetailModal').classList.remove('show');
+        }
+
+        /**
+         * 复制JSON
+         */
+        function copyJSON() {
+            const json = document.getElementById('jsonContent').textContent;
+            navigator.clipboard.writeText(json).then(() => {
+                showToast('JSON已复制到剪贴板', 'success');
+            });
+        }
+
+        // ========== 初始化 ========== //
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLogs();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务列表 - 任务管理系统</title>
+    <style>
+        /* ========== CSS变量定义 ========== */
+        :root {
+            --primary-color: #409EFF;
+            --success-color: #67C23A;
+            --warning-color: #E6A23C;
+            --danger-color: #F56C6C;
+            --info-color: #909399;
+            --text-primary: #303133;
+            --text-regular: #606266;
+            --text-secondary: #909399;
+            --border-color: #DCDFE6;
+            --bg-color: #F5F7FA;
+            --white: #FFFFFF;
+            --shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+            --radius: 4px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* ========== 布局 ========== */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== 侧边栏 ========== */
+        .sidebar {
+            width: 200px;
+            background: var(--white);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            color: var(--text-regular);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-item:hover {
+            background: var(--bg-color);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background: #ECF5FF;
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        /* ========== 主内容区 ========== */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* ========== 页面头部 ========== */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .page-header h2 {
+            font-size: 24px;
+        }
+
+        /* ========== 筛选工具栏 ========== */
+        .toolbar {
+            background: var(--white);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23909399" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat 12px center;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            background: var(--white);
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* ========== 按钮 ========== */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #66B1FF;
+        }
+
+        .btn-default {
+            background: var(--white);
+            color: var(--text-regular);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-default:hover {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* ========== 表格卡片 ========== */
+        .table-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-color);
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-regular);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: #E8EAED;
+        }
+
+        th .sort-icon {
+            margin-left: 4px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #F5F7FA;
+        }
+
+        .task-title {
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .task-title:hover {
+            text-decoration: underline;
+        }
+
+        /* ========== 徽章 ========== */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 2px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .priority-high {
+            background: #FEF0F0;
+            color: var(--danger-color);
+        }
+
+        .priority-medium {
+            background: #FFF7E6;
+            color: var(--warning-color);
+        }
+
+        .priority-low {
+            background: #ECF5FF;
+            color: var(--primary-color);
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+
+        .status-todo {
+            background: #F0F2F5;
+            color: var(--text-regular);
+        }
+
+        .status-in-progress {
+            background: #ECF5FF;
+            color: var(--primary-color);
+        }
+
+        .status-done {
+            background: #F0F9FF;
+            color: var(--success-color);
+        }
+
+        /* ========== 状态下拉框（内联） ========== */
+        .status-select {
+            padding: 4px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 12px;
+            background: var(--white);
+            cursor: pointer;
+        }
+
+        .status-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* ========== 指派人头像 ========== */
+        .assignee-avatar {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.75);
+            color: var(--white);
+            padding: 4px 8px;
+            border-radius: var(--radius);
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            margin-bottom: 6px;
+        }
+
+        .assignee-avatar:hover .tooltip {
+            opacity: 1;
+        }
+
+        /* ========== 空状态 ========== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--text-regular);
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* ========== 分页 ========== */
+        .pagination {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .page-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .page-btn.active {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        /* ========== Toast提示 ========== */
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            min-width: 300px;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.success {
+            background: #F0F9FF;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .toast .icon {
+            font-size: 18px;
+            margin-right: 8px;
+            color: var(--success-color);
+        }
+
+        .toast .message {
+            flex: 1;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- ========== 布局容器 ========== -->
+    <div class="layout">
+        <!-- ========== 侧边栏 ========== -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>任务管理系统</h1>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-item active">📋 任务列表</li>
+                <li class="menu-item" onclick="navigateTo('P02-users.html')">👥 用户管理</li>
+                <li class="menu-item" onclick="navigateTo('P04-audit-logs.html')">📜 审计日志</li>
+                <li class="menu-item" onclick="navigateTo('P05-settings.html')">🔒 安全设置</li>
+            </ul>
+        </aside>
+
+        <!-- ========== 主内容区 ========== -->
+        <main class="main-content">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h2>📋 任务列表</h2>
+                <button class="btn btn-primary" onclick="createTask()">
+                    ➕ 创建任务
+                </button>
+            </div>
+
+            <!-- 筛选工具栏 -->
+            <div class="toolbar">
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        id="searchInput" 
+                        placeholder="搜索任务标题..."
+                    >
+                </div>
+                
+                <select class="filter-select" id="statusFilter">
+                    <option value="">全部状态</option>
+                    <option value="todo">待办</option>
+                    <option value="in-progress">进行中</option>
+                    <option value="done">已完成</option>
+                </select>
+                
+                <select class="filter-select" id="priorityFilter">
+                    <option value="">全部优先级</option>
+                    <option value="high">高</option>
+                    <option value="medium">中</option>
+                    <option value="low">低</option>
+                </select>
+                
+                <select class="filter-select" id="assigneeFilter">
+                    <option value="">全部指派人</option>
+                    <option value="1">张三</option>
+                    <option value="2">李四</option>
+                    <option value="3">王五</option>
+                </select>
+                
+                <button class="btn btn-default" onclick="clearFilters()">重置</button>
+            </div>
+
+            <!-- 表格卡片 -->
+            <div class="table-card">
+                <table id="taskTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('id')">
+                                ID <span class="sort-icon">↕</span>
+                            </th>
+                            <th onclick="sortTable('title')">
+                                任务标题 <span class="sort-icon">↕</span>
+                            </th>
+                            <th onclick="sortTable('status')">
+                                状态 <span class="sort-icon">↕</span>
+                            </th>
+                            <th onclick="sortTable('priority')">
+                                优先级 <span class="sort-icon">↕</span>
+                            </th>
+                            <th>指派人</th>
+                            <th onclick="sortTable('dueDate')">
+                                截止日期 <span class="sort-icon">↕</span>
+                            </th>
+                            <th onclick="sortTable('createdAt')">
+                                创建时间 <span class="sort-icon">↕</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTableBody">
+                        <!-- 数据由JavaScript动态填充 -->
+                    </tbody>
+                </table>
+                
+                <!-- 空状态 -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="icon">📭</div>
+                    <h3>暂无任务</h3>
+                    <p>点击"创建任务"按钮开始添加你的第一个任务</p>
+                    <button class="btn btn-primary" onclick="createTask()">
+                        ➕ 创建任务
+                    </button>
+                </div>
+
+                <div class="pagination" id="pagination">
+                    <div class="pagination-info" id="paginationInfo">第 1-20 条，共 0 条</div>
+                    <div class="pagination-controls">
+                        <button class="page-btn" id="prevBtn" onclick="prevPage()">上一页</button>
+                        <button class="page-btn active" id="currentPageBtn">1</button>
+                        <button class="page-btn" id="nextBtn" onclick="nextPage()">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast提示容器 -->
+    <div id="toastContainer"></div>
+
+    <script>
+        // ========== 工具函数 ========== //
+
+        /**
+         * 防抖函数
+         */
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        /**
+         * Toast提示
+         */
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="icon">✓</span>
+                <div class="message">${message}</div>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        /**
+         * 页面导航
+         */
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        /**
+         * 格式化日期
+         */
+        function formatDate(isoString) {
+            if (!isoString) return '-';
+            const date = new Date(isoString);
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        // ========== 数据管理 ========== //
+
+        let currentPage = 1;
+        const pageSize = 20;
+        let filteredTasks = [];
+        let sortColumn = 'createdAt';
+        let sortDirection = 'desc';
+
+        /**
+         * 初始化任务数据
+         */
+        function initTasks() {
+            let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            
+            // 如果没有数据，生成模拟数据
+            if (tasks.length === 0) {
+                tasks = generateMockTasks();
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
+            
+            return tasks;
+        }
+
+        /**
+         * 生成模拟任务数据
+         */
+        function generateMockTasks() {
+            const mockTasks = [];
+            const titles = [
+                '完成用户登录功能开发',
+                '修复任务列表分页Bug',
+                '优化数据库查询性能',
+                '编写单元测试用例',
+                '更新项目文档',
+                '代码审查与重构',
+                '设计新版UI界面',
+                '实现消息通知功能',
+                '性能测试与优化',
+                '部署生产环境'
+            ];
+            const statuses = ['todo', 'in-progress', 'done'];
+            const priorities = ['high', 'medium', 'low'];
+            const assignees = [1, 2, 3];
+            
+            for (let i = 0; i < 30; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - Math.floor(Math.random() * 30));
+                
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + Math.floor(Math.random() * 30));
+                
+                mockTasks.push({
+                    id: i + 1,
+                    title: titles[Math.floor(Math.random() * titles.length)] + ` #${i + 1}`,
+                    description: '任务描述内容',
+                    status: statuses[Math.floor(Math.random() * statuses.length)],
+                    priority: priorities[Math.floor(Math.random() * priorities.length)],
+                    assigneeId: assignees[Math.floor(Math.random() * assignees.length)],
+                    creatorId: 1,
+                    dueDate: dueDate.toISOString(),
+                    tags: ['开发'],
+                    createdAt: date.toISOString(),
+                    updatedAt: date.toISOString()
+                });
+            }
+            
+            return mockTasks;
+        }
+
+        /**
+         * 获取指派人信息
+         */
+        function getAssignee(assigneeId) {
+            const assignees = {
+                1: { name: '张三', initial: '张' },
+                2: { name: '李四', initial: '李' },
+                3: { name: '王五', initial: '王' }
+            };
+            return assignees[assigneeId] || { name: '未分配', initial: '?' };
+        }
+
+        /**
+         * 应用筛选条件
+         */
+        function applyFilters(tasks) {
+            let filtered = [...tasks];
+            
+            // 搜索过滤
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            if (searchText) {
+                filtered = filtered.filter(task => 
+                    task.title.toLowerCase().includes(searchText)
+                );
+            }
+            
+            // 状态过滤
+            const statusFilter = document.getElementById('statusFilter').value;
+            if (statusFilter) {
+                filtered = filtered.filter(task => task.status === statusFilter);
+            }
+            
+            // 优先级过滤
+            const priorityFilter = document.getElementById('priorityFilter').value;
+            if (priorityFilter) {
+                filtered = filtered.filter(task => task.priority === priorityFilter);
+            }
+            
+            // 指派人过滤
+            const assigneeFilter = document.getElementById('assigneeFilter').value;
+            if (assigneeFilter) {
+                filtered = filtered.filter(task => task.assigneeId === parseInt(assigneeFilter));
+            }
+            
+            return filtered;
+        }
+
+        /**
+         * 排序任务
+         */
+        function sortTasks(tasks) {
+            return tasks.sort((a, b) => {
+                let aVal = a[sortColumn];
+                let bVal = b[sortColumn];
+                
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+        }
+
+        /**
+         * 表格排序
+         */
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+            loadTasks();
+        }
+
+        /**
+         * 加载任务列表
+         */
+        function loadTasks() {
+            const tasks = initTasks();
+            filteredTasks = applyFilters(tasks);
+            filteredTasks = sortTasks(filteredTasks);
+            renderTasks();
+            updatePagination();
+            checkEmptyState();
+        }
+
+        /**
+         * 渲染任务列表
+         */
+        function renderTasks() {
+            const tbody = document.getElementById('taskTableBody');
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageTasks = filteredTasks.slice(start, end);
+            
+            tbody.innerHTML = pageTasks.map(task => {
+                const assignee = getAssignee(task.assigneeId);
+                const statusText = {
+                    'todo': '待办',
+                    'in-progress': '进行中',
+                    'done': '已完成'
+                };
+                const priorityText = {
+                    'high': '高',
+                    'medium': '中',
+                    'low': '低'
+                };
+                
+                return `
+                    <tr>
+                        <td>#${task.id}</td>
+                        <td>
+                            <a href="P08-task-detail.html?id=${task.id}" class="task-title">
+                                ${task.title}
+                            </a>
+                        </td>
+                        <td>
+                            <select class="status-select" onchange="updateTaskStatus(${task.id}, this.value)" data-value="${task.status}">
+                                <option value="todo" ${task.status === 'todo' ? 'selected' : ''}>待办</option>
+                                <option value="in-progress" ${task.status === 'in-progress' ? 'selected' : ''}>进行中</option>
+                                <option value="done" ${task.status === 'done' ? 'selected' : ''}>已完成</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span class="badge priority-${task.priority}">
+                                ${priorityText[task.priority]}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="assignee-avatar">
+                                <div class="avatar">${assignee.initial}</div>
+                                <div class="tooltip">${assignee.name}</div>
+                            </div>
+                        </td>
+                        <td>${formatDate(task.dueDate)}</td>
+                        <td>${formatDate(task.createdAt)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        /**
+         * 更新任务状态
+         */
+        function updateTaskStatus(taskId, newStatus) {
+            const tasks = initTasks();
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            
+            if (taskIndex !== -1) {
+                const oldStatus = tasks[taskIndex].status;
+                tasks[taskIndex].status = newStatus;
+                tasks[taskIndex].updatedAt = new Date().toISOString();
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                
+                // 记录任务历史
+                const taskHistory = JSON.parse(localStorage.getItem('taskHistory') || '[]');
+                taskHistory.unshift({
+                    id: Date.now(),
+                    taskId: taskId,
+                    userId: 1,
+                    changeType: 'status',
+                    fieldName: '状态',
+                    oldValue: oldStatus,
+                    newValue: newStatus,
+                    timestamp: new Date().toISOString()
+                });
+                localStorage.setItem('taskHistory', JSON.stringify(taskHistory));
+                
+                showToast('任务状态已更新', 'success');
+                loadTasks();
+            }
+        }
+
+        /**
+         * 检查空状态
+         */
+        function checkEmptyState() {
+            const emptyState = document.getElementById('emptyState');
+            const table = document.getElementById('taskTable');
+            const pagination = document.getElementById('pagination');
+            
+            if (filteredTasks.length === 0) {
+                emptyState.style.display = 'block';
+                table.style.display = 'none';
+                pagination.style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                table.style.display = 'table';
+                pagination.style.display = 'flex';
+            }
+        }
+
+        /**
+         * 更新分页信息
+         */
+        function updatePagination() {
+            const total = filteredTasks.length;
+            const start = Math.min((currentPage - 1) * pageSize + 1, total);
+            const end = Math.min(currentPage * pageSize, total);
+            
+            document.getElementById('paginationInfo').textContent = 
+                `第 ${start}-${end} 条，共 ${total} 条`;
+            
+            document.getElementById('currentPageBtn').textContent = currentPage;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = end >= total;
+        }
+
+        /**
+         * 上一页
+         */
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTasks();
+                updatePagination();
+            }
+        }
+
+        /**
+         * 下一页
+         */
+        function nextPage() {
+            const maxPage = Math.ceil(filteredTasks.length / pageSize);
+            if (currentPage < maxPage) {
+                currentPage++;
+                renderTasks();
+                updatePagination();
+            }
+        }
+
+        /**
+         * 清除筛选
+         */
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('priorityFilter').value = '';
+            document.getElementById('assigneeFilter').value = '';
+            currentPage = 1;
+            loadTasks();
+        }
+
+        /**
+         * 创建任务
+         */
+        function createTask() {
+            navigateTo('P07-task-create.html');
+        }
+
+        // ========== 初始化 ========== //
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTasks();
+            
+            // 搜索防抖
+            document.getElementById('searchInput').addEventListener('input', debounce(function() {
+                currentPage = 1;
+                loadTasks();
+            }, 200));
+            
+            // 筛选器变更
+            document.getElementById('statusFilter').addEventListener('change', function() {
+                currentPage = 1;
+                loadTasks();
+            });
+            
+            document.getElementById('priorityFilter').addEventListener('change', function() {
+                currentPage = 1;
+                loadTasks();
+            });
+            
+            document.getElementById('assigneeFilter').addEventListener('change', function() {
+                currentPage = 1;
+                loadTasks();
+            });
+        });
+    </script>
+</body>
+</html>
